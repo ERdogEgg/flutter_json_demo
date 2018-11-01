@@ -4,8 +4,10 @@ typedef void OnTouchCallback(int index);
 
 class Contact extends StatefulWidget {
   final List data;
+  final double suspensionHeight;
+  final double itemHeight;
 
-  Contact({this.data});
+  Contact({this.data, this.suspensionHeight = 20.0, this.itemHeight = 60.0});
 
   @override
   State createState() {
@@ -17,12 +19,24 @@ class _ContactState extends State<Contact> {
   ScrollController scrollController = new ScrollController();
   List<String> indexTagList = new List();
   List userList = new List();
+  int defaultIndex = 0;
 
   void _initIndexBarData() {
     indexTagList.clear();
     widget.data?.forEach((v) {
       indexTagList.add(v['title'].toString().toUpperCase());
     });
+  }
+
+  double _computerIndexPosition(int index) {
+    int n = 0;
+    if (widget.data != null) {
+      for (int i = 0; i < index; i++) {
+        n += (widget.data[i]['userList'].length).toInt();
+      }
+    }
+    return n * (widget.suspensionHeight + widget.itemHeight) +
+        widget.suspensionHeight;
   }
 
   void _initUserData() {
@@ -33,8 +47,11 @@ class _ContactState extends State<Contact> {
   }
 
   void _onTouchCallback(int index) {
-    print(index);
-    scrollController.jumpTo(index * 20.0);
+    setState(() {
+      defaultIndex = index;
+    });
+    scrollController.jumpTo(_computerIndexPosition(index)
+        .clamp(.0, scrollController.position.maxScrollExtent));
   }
 
   @override
@@ -52,7 +69,17 @@ class _ContactState extends State<Contact> {
           child: new Column(
             children: <Widget>[
               new Container(
-                child: new Text('111111'),
+                child: new Text(
+                  indexTagList.isNotEmpty
+                      ? '${indexTagList[defaultIndex]}'
+                      : "A",
+                  textScaleFactor: 1.2,
+                ),
+                alignment: Alignment.centerLeft,
+                margin: const EdgeInsets.only(
+                  left: 16.0,
+                ),
+                height: 40.0,
               ),
               new Expanded(
                   child: new ListView.builder(
@@ -62,15 +89,17 @@ class _ContactState extends State<Contact> {
                       Offstage(
                         child: new Container(
                           child: new Text(
-                            "${userList[index]['title']}",
+                            "${userList[index]['title'].toString().toUpperCase()}",
                           ),
                           alignment: Alignment.centerLeft,
                           margin: const EdgeInsets.only(left: 16.0),
+                          height: widget.suspensionHeight,
                         ),
                         offstage: false,
                       ),
                       new UserList(
                         userList: userList[index]['userList'],
+                        itemHeight: widget.itemHeight,
                       )
                     ],
                   );
@@ -96,8 +125,9 @@ class _ContactState extends State<Contact> {
 
 class UserList extends StatefulWidget {
   final List userList;
+  final double itemHeight;
 
-  UserList({this.userList});
+  UserList({this.userList, this.itemHeight});
 
   @override
   State createState() {
@@ -113,6 +143,7 @@ class _UserListState extends State<UserList> {
     widget.userList?.forEach((v) {
       children.add(new UserDetail(
         userDetail: v,
+        itemHeight: widget.itemHeight,
       ));
     });
   }
@@ -128,8 +159,9 @@ class _UserListState extends State<UserList> {
 
 class UserDetail extends StatefulWidget {
   final Map userDetail;
+  final double itemHeight;
 
-  UserDetail({this.userDetail});
+  UserDetail({this.userDetail, this.itemHeight});
 
   @override
   State createState() {
@@ -140,8 +172,14 @@ class UserDetail extends StatefulWidget {
 class _UserDetailState extends State<UserDetail> {
   @override
   Widget build(BuildContext context) {
-    return new ListTile(
-      title: new Text("${widget.userDetail['name']}"),
+    return new GestureDetector(
+      onTap: () {},
+      child: new Container(
+        child: new ListTile(
+          title: new Text("${widget.userDetail['name']}"),
+        ),
+        height: widget.itemHeight,
+      ),
     );
   }
 }
@@ -190,7 +228,7 @@ class _IndexBarState extends State<IndexBar> {
         int offset = details.globalPosition.dy.toInt();
         RenderBox rb = context.findRenderObject();
         int top = rb.localToGlobal(Offset.zero).dy.toInt();
-        _triggerTouch(((offset - top) / 20).ceil());
+        _triggerTouch(((offset - top) / 20).floor());
       },
       child: new Column(
         mainAxisSize: MainAxisSize.min,
