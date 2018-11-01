@@ -26,8 +26,8 @@ class _ContactState extends State<Contact> {
     // TODO: implement initState
     super.initState();
     scrollController.addListener(() {
-      double i = scrollController.offset.toDouble();
-      int index = _computerIndex(i);
+      double position = scrollController.offset.toDouble();
+      int index = _computerIndex(position);
       setState(() {
         defaultIndex = index;
       });
@@ -68,8 +68,7 @@ class _ContactState extends State<Contact> {
         n += (widget.data[i]['userList'].length).toInt();
       }
     }
-    return n * (widget.suspensionHeight + widget.itemHeight) +
-        widget.suspensionHeight;
+    return n * widget.itemHeight + (index + 1) * widget.suspensionHeight;
   }
 
   void _initUserData() {
@@ -119,16 +118,8 @@ class _ContactState extends State<Contact> {
                 itemBuilder: (context, index) {
                   return new Column(
                     children: <Widget>[
-                      Offstage(
-                        child: new Container(
-                          child: new Text(
-                            "${userList[index]['title'].toString().toUpperCase()}",
-                          ),
-                          alignment: Alignment.centerLeft,
-                          margin: const EdgeInsets.only(left: 16.0),
-                          height: widget.suspensionHeight,
-                        ),
-                        offstage: false,
+                      new Suspension(
+                        tag: userList[index]['title'].toString().toUpperCase(),
                       ),
                       new UserList(
                         userList: userList[index]['userList'],
@@ -152,6 +143,28 @@ class _ContactState extends State<Contact> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class Suspension extends StatelessWidget {
+  final String tag;
+  final double suspensionHeight;
+
+  Suspension({this.tag, this.suspensionHeight});
+
+  @override
+  Widget build(BuildContext context) {
+    return Offstage(
+      child: new Container(
+        child: new Text(
+          "$tag",
+        ),
+        alignment: Alignment.centerLeft,
+        margin: const EdgeInsets.only(left: 16.0),
+        height: suspensionHeight,
+      ),
+      offstage: false,
     );
   }
 }
