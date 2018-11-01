@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'dart:convert';
 import 'User.dart';
+import 'widget/Contact.dart';
 
 void main() => runApp(MyApp());
 
@@ -37,15 +38,21 @@ class _MyAppWidget extends StatefulWidget {
 
 class _MyAppState extends State<_MyAppWidget> {
   String jsonStr;
-  var userData;
+  List userData;
 
   void _loadJson() async {
     rootBundle.loadString('assets/data/user.json').then((val) {
-      var user = json.decode(val);
-      setState(() {
-        userData = user['data'];
-      });
+      Map user = json.decode(val);
+      userData = user['data'];
+      setState(() {});
     });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadJson();
   }
 
   @override
@@ -53,36 +60,10 @@ class _MyAppState extends State<_MyAppWidget> {
     return new Scaffold(
       appBar: new AppBar(),
       body: new Center(
-        child: new Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            new IconButton(
-              icon: new Icon(Icons.refresh),
-              onPressed: () {
-                _loadJson();
-                if (jsonStr != null) {
-                  var user = json.decode(jsonStr);
-                  print(user['data']);
-                }
-              },
-            ),
-            new Expanded(
-              child: userData == null
-                  ? new Text("$jsonStr")
-                  : new ListView.builder(
-                      itemBuilder: (context, index) {
-                        return new Column(
-                          children: <Widget>[
-                            new ListTile(
-                              title: new Text('${userData[index]['title']}'),
-                            ),
-                          ],
-                        );
-                      },
-                      itemCount: userData.length,
-                    ),
-            ),
-          ],
+        child: new Container(
+          child: new Contact(
+            data: userData,
+          ),
         ),
       ),
     );
