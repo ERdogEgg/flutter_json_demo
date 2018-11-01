@@ -7,7 +7,7 @@ class Contact extends StatefulWidget {
   final double suspensionHeight;
   final double itemHeight;
 
-  Contact({this.data, this.suspensionHeight = 20.0, this.itemHeight = 60.0});
+  Contact({this.data, this.suspensionHeight = 20.0, this.itemHeight = 40.0});
 
   @override
   State createState() {
@@ -21,11 +21,44 @@ class _ContactState extends State<Contact> {
   List userList = new List();
   int defaultIndex = 0;
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    scrollController.addListener(() {
+      double i = scrollController.offset.toDouble();
+      int index = _computerIndex(i);
+      setState(() {
+        defaultIndex = index;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    // TODO: implement dispose
+    super.dispose();
+  }
+
   void _initIndexBarData() {
     indexTagList.clear();
     widget.data?.forEach((v) {
       indexTagList.add(v['title'].toString().toUpperCase());
     });
+  }
+
+  int _computerIndex(double position) {
+    if (widget.data != null) {
+      for (int i = 0; i < widget.data.length - 1; i++) {
+        double pre = _computerIndexPosition(i);
+        double next = _computerIndexPosition(i + 1);
+        if (position > pre && position < next) {
+          return i;
+        }
+      }
+    }
+    return 0;
   }
 
   double _computerIndexPosition(int index) {
@@ -47,11 +80,11 @@ class _ContactState extends State<Contact> {
   }
 
   void _onTouchCallback(int index) {
+    scrollController.jumpTo(_computerIndexPosition(index)
+        .clamp(.0, scrollController.position.maxScrollExtent));
     setState(() {
       defaultIndex = index;
     });
-    scrollController.jumpTo(_computerIndexPosition(index)
-        .clamp(.0, scrollController.position.maxScrollExtent));
   }
 
   @override
