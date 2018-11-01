@@ -276,6 +276,13 @@ class _IndexBarState extends State<IndexBar> {
         int top = rb.localToGlobal(Offset.zero).dy.toInt();
         _triggerTouch(((offset - top) / 20).floor());
       },
+      onVerticalDragUpdate: (DragUpdateDetails details) {
+        int offset = details.globalPosition.dy.toInt();
+        RenderBox rb = context.findRenderObject();
+        int top = rb.localToGlobal(Offset.zero).dy.toInt();
+        int index = ((offset - top) / 20).floor();
+        _triggerTouch(index.clamp(.0, children.length - 1));
+      },
       child: new Column(
         mainAxisSize: MainAxisSize.min,
         children: children,
